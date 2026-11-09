@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:task1fassla/core/style/color_manager.dart';
 import 'package:task1fassla/core/widgets/app_custom_bar.dart';
@@ -8,6 +7,7 @@ import 'package:task1fassla/feature/cart/widget/cart_summary.dart';
 import 'package:task1fassla/feature/cart/widget/check_out_button.dart';
 import 'package:task1fassla/feature/cart/widget/promo_code_field.dart';
 import 'package:task1fassla/feature/checkout/check_out_screen.dart';
+import 'package:task1fassla/feature/home/home_screen.dart';
 
 class CartScreen extends StatefulWidget {
   const CartScreen({super.key});
@@ -36,8 +36,7 @@ class _CartScreenState extends State<CartScreen> {
     ),
   ];
 
-  int get _itemsCount =>
-      _items.fold(0, (sum, item) => sum + item.quantity);
+  int get _itemsCount => _items.fold(0, (sum, item) => sum + item.quantity);
 
   double get _subtotal =>
       _items.fold(0.0, (sum, item) => sum + item.price * item.quantity);
@@ -67,10 +66,18 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       backgroundColor: ColorManager.backgroundColor,
 
-      appBar: const AppCustomBar(
-        title: 'My Cart',
-        
+     appBar: AppCustomBar(
+  title: 'My Cart',
+  showBackButton: true,
+  onBackPressed: () {
+    Navigator.pushReplacement(
+      context,
+      MaterialPageRoute(
+        builder: (context) => const HomeScreen(),
       ),
+    );
+  },
+),
 
       body: SafeArea(
         child: Column(
@@ -109,10 +116,7 @@ class _CartScreenState extends State<CartScreen> {
 
                   const SizedBox(height: 20),
 
-                  CartSummary(
-                    subtotal: _subtotal,
-                    delivery: _deliveryFee,
-                  ),
+                  CartSummary(subtotal: _subtotal, delivery: _deliveryFee),
                 ],
               ),
             ),
@@ -126,8 +130,7 @@ class _CartScreenState extends State<CartScreen> {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
-                            builder: (context) =>
-                                const CheckoutScreen(),
+                            builder: (context) => const CheckoutScreen(),
                           ),
                         );
                       },

@@ -7,12 +7,14 @@ class AppCustomBar extends StatelessWidget
   final String title;
   final bool showBackButton;
   final Widget? action;
+  final VoidCallback? onBackPressed;
 
   const AppCustomBar({
     super.key,
     required this.title,
     this.showBackButton = true,
     this.action,
+    this.onBackPressed,
   });
 
   @override
@@ -34,7 +36,8 @@ class AppCustomBar extends StatelessWidget
                 size: 20,
                 color: ColorManager.textColor,
               ),
-              onPressed: () => Navigator.maybePop(context),
+              onPressed: onBackPressed ??
+                  () => Navigator.maybePop(context),
             )
           : null,
       title: Text(
