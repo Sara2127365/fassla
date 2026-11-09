@@ -1,19 +1,23 @@
 
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:task1fassla/core/style/color_manager.dart';
+import 'package:task1fassla/feature/cart/cubit/cart_cubit.dart';
+import 'package:task1fassla/feature/cart/models/cart_item.dart';
 
 class ProductDetailsScreen extends StatelessWidget {
   final String name;
   final String price;
   final String rating;
-  final String imageUrl;
+  final String imagePath;
 
   const ProductDetailsScreen({
     super.key,
     required this.name,
     required this.price,
     required this.rating,
-    required this.imageUrl,
+    required this.imagePath,
   });
 
   @override
@@ -47,8 +51,8 @@ class ProductDetailsScreen extends StatelessWidget {
                 color: Colors.white,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: Image.network(
-                imageUrl,
+              child: Image.asset(
+                imagePath,
                 fit: BoxFit.contain,
                 errorBuilder: (context, error, stackTrace) {
                   return const Icon(
@@ -118,18 +122,63 @@ class ProductDetailsScreen extends StatelessWidget {
               width: double.infinity,
               height: 52,
               child: ElevatedButton(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-    const SnackBar(
-      content: Text(
-        'Product added to cart successfully!',
-        style: TextStyle(color: Colors.white),
-      ),
-      backgroundColor: ColorManager.green,
-      duration: Duration(seconds: 2),
-      behavior: SnackBarBehavior.floating,
-    ),
-  );
+                onPressed: () async {
+                  try {
+                    await context.read<CartCubit>().addItem(
+                      CartItem(
+                        name: name,
+                        price: price,
+                        imagePath: imagePath,
+                      ),
+                    );
+
+                    if (!context.mounted) return;
+
+                    ScaffoldMessenger.of(context)
+                      ..hideCurrentSnackBar()
+                      ..showSnackBar(
+                        SnackBar(
+                          content: const Row(
+                            children: [
+                              Icon(
+                                Icons.check_circle,
+                                color: Colors.white,
+                              ),
+                              SizedBox(width: 10),
+                              Expanded(
+                                child: Text(
+                                  'Product added to cart successfully!',
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                          backgroundColor: ColorManager.green,
+                          behavior: SnackBarBehavior.floating,
+                          duration: const Duration(seconds: 2),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                      );
+                  } catch (e, stackTrace) {
+                    debugPrint('ADD TO CART ERROR: $e');
+                    debugPrint('STACK TRACE: $stackTrace');
+
+                    if (!context.mounted) return;
+
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('Failed to add product: $e'),
+                        backgroundColor: Colors.red,
+                        behavior: SnackBarBehavior.floating,
+                        duration: const Duration(seconds: 5),
+                      ),
+                    );
+                  }
                 },
                 style: ElevatedButton.styleFrom(
                   backgroundColor: ColorManager.primaryColor,

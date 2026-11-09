@@ -1,6 +1,9 @@
-import 'package:flutter/material.dart';
-import 'package:task1fassla/core/style/color_manager.dart';
 
+import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
+import 'package:task1fassla/core/style/color_manager.dart';
+import 'package:task1fassla/feature/home/cubit/home_cubit.dart';
 
 class HomeSearchBar extends StatelessWidget {
   const HomeSearchBar({super.key});
@@ -19,8 +22,11 @@ class HomeSearchBar extends StatelessWidget {
                 color: ColorManager.borderColor,
               ),
             ),
-            child: const TextField(
-              decoration: InputDecoration(
+            child: TextField(
+              onChanged: (value) {
+                context.read<HomeCubit>().searchProducts(value);
+              },
+              decoration: const InputDecoration(
                 hintText: 'Search products',
                 hintStyle: TextStyle(
                   color: ColorManager.greyColor,

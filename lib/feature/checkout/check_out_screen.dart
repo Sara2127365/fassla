@@ -1,22 +1,29 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task1fassla/core/style/color_manager.dart';
 import 'package:task1fassla/feature/checkout/checkout_stepper.dart';
+import 'package:task1fassla/feature/checkout/cubit/check_out_cubit.dart';
+import 'package:task1fassla/feature/checkout/cubit/check_out_state.dart';
 import 'package:task1fassla/feature/checkout/delivery_address_card.dart';
-import 'package:task1fassla/feature/checkout/order_summary_card.dart';
 import 'package:task1fassla/feature/checkout/payment_method_section.dart';
-import 'package:task1fassla/feature/checkout/place_order_button.dart';
 import 'package:task1fassla/feature/checkout/section_title.dart';
-import 'package:task1fassla/feature/orders/order_screen.dart';
+import 'package:task1fassla/feature/checkout/order_summary_card.dart';
 
-class CheckoutScreen extends StatefulWidget {
+class CheckoutScreen extends StatelessWidget {
   const CheckoutScreen({super.key});
 
   @override
-  State<CheckoutScreen> createState() => _CheckoutScreenState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (context) => CheckoutCubit(),
+      child: const CheckoutView(),
+    );
+  }
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> {
-  PaymentMethod _payment = PaymentMethod.cash;
+class CheckoutView extends StatelessWidget {
+  const CheckoutView({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -50,13 +57,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const CheckoutStepper(currentStep: 2),
+              const CheckoutStepper(currentStep: 1),
+
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 20),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SectionTitle('Delivery address'),
+
                     DeliveryAddressCard(
                       label: 'Home',
                       nameAndPhone: 'Alex Morgan · +1 555 010 234',
@@ -64,30 +73,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                       city: 'New York, NY 10016',
                       onEdit: () {},
                     ),
+
                     const SizedBox(height: 22),
+
                     const SectionTitle('Payment method'),
-                    PaymentMethodSection(
-                      selected: _payment,
-                      onChanged: (value) {
-                        setState(() {
-                          _payment = value;
-                        });
+
+                    BlocBuilder<CheckoutCubit, CheckoutState>(
+                      builder: (context, state) {
+                        final cubit = context.read<CheckoutCubit>();
+
+                        final selectedPayment =
+                            state is CheckoutFormUpdated
+                                ? state.paymentMethod
+                                : cubit.paymentMethod;
+
+                        return PaymentMethodSection(
+                          selected: selectedPayment,
+                          onChanged: cubit.updatePaymentMethod,
+                        );
                       },
                     ),
-                    const SizedBox(height: 22),
-                    const SectionTitle('Order summary'),
-                    const OrderSummaryCard(
-                      itemsCount: 3,
-                      itemsTotal: 218.00,
-                      deliveryFee: 8.00,
-                    ),
-                    const SizedBox(height: 20),
-                    PlaceOrderButton(
-                      onPressed: () {
-                        Navigator.pushReplacement(context,   MaterialPageRoute(
-              builder: (context) => const OrderConfirmationScreen(),
-            ),);
-                      },
+
+                    const SizedBox(height: 30),
+
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => BlocProvider.value(
+                                value: context.read<CheckoutCubit>(),
+                                child: const OrderSummarySection(),
+                              ),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: ColorManager.primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: const Text(
+                          'Continue',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
                     ),
                   ],
                 ),

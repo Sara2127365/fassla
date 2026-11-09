@@ -7,14 +7,14 @@ class ProductCard extends StatelessWidget {
   final String name;
   final String price;
   final String rating;
-  final String imageUrl;
+  final String imagePath;
 
   const ProductCard({
     super.key,
     required this.name,
     required this.price,
     required this.rating,
-    required this.imageUrl,
+    required this.imagePath,
   });
 
   @override
@@ -29,7 +29,7 @@ class ProductCard extends StatelessWidget {
               name: name,
               price: price,
               rating: rating,
-              imageUrl: imageUrl,
+              imagePath: imagePath,
             ),
           ),
         );
@@ -39,7 +39,9 @@ class ProductCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: ColorManager.borderColor),
+          border: Border.all(
+            color: ColorManager.borderColor,
+          ),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -55,7 +57,7 @@ class ProductCard extends StatelessWidget {
             Expanded(
               child: Center(
                 child: Image.asset(
-                  imageUrl,
+                  imagePath,
                   fit: BoxFit.contain,
                   width: double.infinity,
                   errorBuilder: (context, error, stackTrace) {

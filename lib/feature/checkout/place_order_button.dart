@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:task1fassla/core/style/color_manager.dart';
 
 class PlaceOrderButton extends StatelessWidget {
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
 
   const PlaceOrderButton({
     super.key,

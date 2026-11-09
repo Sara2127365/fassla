@@ -1,9 +1,8 @@
+
 import 'package:flutter/material.dart';
 import 'package:task1fassla/core/style/color_manager.dart';
 import 'package:task1fassla/feature/cart/models/cart_item.dart';
 import 'package:task1fassla/feature/cart/widget/quantity_stepper.dart';
-import 'package:task1fassla/feature/checkout/check_out_screen.dart';
-
 
 class CartItemCard extends StatelessWidget {
   final CartItem item;
@@ -26,9 +25,11 @@ class CartItemCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: ColorManager.borderColor,
-      ),),
-        child: Row(
+        border: Border.all(
+          color: ColorManager.borderColor,
+        ),
+      ),
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           SizedBox(
@@ -37,7 +38,6 @@ class CartItemCard extends StatelessWidget {
             child: Image.asset(
               item.imagePath,
               fit: BoxFit.contain,
-              // fallback لو الصورة مش موجودة
               errorBuilder: (_, __, ___) => const Icon(
                 Icons.image_outlined,
                 size: 40,
@@ -61,7 +61,7 @@ class CartItemCard extends StatelessWidget {
                 ),
                 const SizedBox(height: 4),
                 Text(
-                  '\$${item.price.toStringAsFixed(2)}',
+                  '\$${item.numericPrice.toStringAsFixed(2)}',
                   style: const TextStyle(
                     fontWeight: FontWeight.w800,
                     fontSize: 16,
@@ -71,7 +71,9 @@ class CartItemCard extends StatelessWidget {
                 const SizedBox(height: 8),
                 QuantityStepper(
                   quantity: item.quantity,
-                  onIncrement: onIncrement,
+                  onIncrement: item.quantity < 100
+                      ? onIncrement
+                      : () {},
                   onDecrement: onDecrement,
                 ),
               ],
@@ -90,5 +92,3 @@ class CartItemCard extends StatelessWidget {
     );
   }
 }
-
-/// ---------- 3) Promo code ----------

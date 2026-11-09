@@ -1,8 +1,12 @@
+
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+
 import 'package:task1fassla/core/style/color_manager.dart';
 import 'package:task1fassla/core/widgets/app_custom_bar.dart';
 import 'package:task1fassla/feature/cart/cart_item_card.dart';
-import 'package:task1fassla/feature/cart/models/cart_item.dart';
+import 'package:task1fassla/feature/cart/cubit/cart_cubit.dart';
+import 'package:task1fassla/feature/cart/cubit/cart_state.dart';
 import 'package:task1fassla/feature/cart/widget/cart_summary.dart';
 import 'package:task1fassla/feature/cart/widget/check_out_button.dart';
 import 'package:task1fassla/feature/cart/widget/promo_code_field.dart';
@@ -19,41 +23,8 @@ class CartScreen extends StatefulWidget {
 class _CartScreenState extends State<CartScreen> {
   static const double _deliveryFee = 8.00;
 
-  final _promoController = TextEditingController();
-
-  final List<CartItem> _items = [
-    CartItem(
-      name: 'Wireless Headphones',
-      price: 89.00,
-      imagePath: 'assets/images/head_phone.png',
-      quantity: 1,
-    ),
-    CartItem(
-      name: 'Smart Watch',
-      price: 129.00,
-      imagePath: 'assets/images/watch.png',
-      quantity: 1,
-    ),
-  ];
-
-  int get _itemsCount => _items.fold(0, (sum, item) => sum + item.quantity);
-
-  double get _subtotal =>
-      _items.fold(0.0, (sum, item) => sum + item.price * item.quantity);
-
-  void _increment(CartItem item) {
-    setState(() => item.quantity++);
-  }
-
-  void _decrement(CartItem item) {
-    if (item.quantity > 1) {
-      setState(() => item.quantity--);
-    }
-  }
-
-  void _delete(CartItem item) {
-    setState(() => _items.remove(item));
-  }
+  final TextEditingController _promoController =
+      TextEditingController();
 
   @override
   void dispose() {
@@ -66,78 +37,146 @@ class _CartScreenState extends State<CartScreen> {
     return Scaffold(
       backgroundColor: ColorManager.backgroundColor,
 
-     appBar: AppCustomBar(
-  title: 'My Cart',
-  showBackButton: true,
-  onBackPressed: () {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (context) => const HomeScreen(),
+      appBar: AppCustomBar(
+        title: 'My Cart',
+        showBackButton: true,
+        onBackPressed: () {
+          Navigator.pushReplacement(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const HomeScreen(),
+            ),
+          );
+        },
       ),
-    );
-  },
-),
 
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+      body: BlocBuilder<CartCubit, CartState>(
+        builder: (context, state) {
+          if (state is CartInitial || state is CartLoading) {
+            return const Center(
+              child: CircularProgressIndicator(),
+            );
+          }
+
+          if (state is CartError) {
+            return Center(
+              child: Text(
+                state.message,
+                style: const TextStyle(color: Colors.red),
+              ),
+            );
+          }
+
+          if (state is CartLoaded) {
+            final items = state.items;
+
+            if (items.isEmpty) {
+              return Column(
                 children: [
-                  Text(
-                    '$_itemsCount items in your bag',
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: ColorManager.textColor,
+                  const Expanded(
+                    child: Center(
+                      child: Text(
+                        'Your cart is empty',
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: ColorManager.textColor,
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(height: 12),
-
-                  for (final item in _items) ...[
-                    CartItemCard(
-                      item: item,
-                      onIncrement: () => _increment(item),
-                      onDecrement: () => _decrement(item),
-                      onDelete: () => _delete(item),
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(
+                      20, 8, 20, 20,
                     ),
-                    const SizedBox(height: 12),
-                  ],
+                    child: CheckoutButton(
+                      onPressed: null,
+                    ),
+                  ),
+                ],
+              );
+            }
 
-                  const SizedBox(height: 16),
+            return Column(
+              children: [
+                Expanded(
+                  child: ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      20, 12, 20, 20,
+                    ),
+                    children: [
+                      Text(
+                        '${state.totalItems} items in your bag',
+                        style: const TextStyle(
+                          fontSize: 13,
+                          color: ColorManager.textColor,
+                        ),
+                      ),
 
-                  PromoCodeField(
-                    controller: _promoController,
-                    onApply: () {
-                      // TODO: Apply promo code
+                      const SizedBox(height: 12),
+
+                      for (int index = 0;
+                          index < items.length;
+                          index++) ...[
+                        CartItemCard(
+                          item: items[index],
+
+                          onIncrement: () {
+                            context.read<CartCubit>().increment(index);
+                          },
+
+                          onDecrement: () {
+                            context.read<CartCubit>().decrement(index);
+                          },
+
+                          onDelete: () {
+                            context.read<CartCubit>().removeItem(index);
+                          },
+                        ),
+
+                        const SizedBox(height: 12),
+                      ],
+
+                      const SizedBox(height: 16),
+
+                      PromoCodeField(
+                        controller: _promoController,
+                        onApply: () {
+                          // TODO: Apply promo code
+                        },
+                      ),
+
+                      const SizedBox(height: 20),
+
+                      CartSummary(
+                        subtotal: state.subtotal,
+                        delivery: _deliveryFee,
+                      ),
+                    ],
+                  ),
+                ),
+
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(
+                    20, 8, 20, 20,
+                  ),
+                  child: CheckoutButton(
+                    onPressed: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) =>
+                              const CheckoutScreen(),
+                        ),
+                      );
                     },
                   ),
+                ),
+              ],
+            );
+          }
 
-                  const SizedBox(height: 20),
-
-                  CartSummary(subtotal: _subtotal, delivery: _deliveryFee),
-                ],
-              ),
-            ),
-
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 8, 20, 20),
-              child: CheckoutButton(
-                onPressed: _items.isEmpty
-                    ? null
-                    : () {
-                        Navigator.pushReplacement(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const CheckoutScreen(),
-                          ),
-                        );
-                      },
-              ),
-            ),
-          ],
-        ),
+          return const SizedBox();
+        },
       ),
     );
   }
